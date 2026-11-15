@@ -1,0 +1,15 @@
+[package]
+name = "sb4a-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "sb4a"
+path = "src/main.rs"
+
+[dependencies]
+sb4a-core = { path = "../sb4a-core" }
+serde_json.workspace = true
+libc.workspace = true

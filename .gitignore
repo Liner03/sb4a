@@ -1,0 +1,4 @@
+/target/
+/.ndk/
+*.swp
+.DS_Store
