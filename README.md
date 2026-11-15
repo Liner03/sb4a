@@ -21,6 +21,9 @@ Android 12+ / arm64-v8a。作者：Lin。GPL-3.0-or-later。
 
 在 Magisk / KernelSU / APatch 里刷 `sb4a-module-arm64.zip`。
 
+现成的包在 [Releases](https://github.com/Liner03/sb4a/releases)：打 `v*` tag 会自动
+编译并附上 zip，也可以手动触发 workflow 只取 Artifacts。
+
 首次安装**不接管网络**，模块启动后保持空闲，直到你提交配置。这是故意的：
 装完就断网是最糟糕的体验。
 
