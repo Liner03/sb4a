@@ -88,7 +88,16 @@ sb4a config convert < config.json > portable.json
 无法映射的 **remote** 规则集会保留——核心自己会下载。
 
 实测：一份 123KB / 263 个 outbound / 21 个 rule_set 的真实配置，
-转换后 19 个规则集改成别名、2 个丢弃、TUN 建立、出口 IP 正确改变。
+转换后 19 个规则集改成别名、2 个丢弃、TUN 建立、Google / YouTube
+均返回 200。
+
+**被丢弃的通常是 GUI 里手写的本地规则集**（如 `direct.json` / `proxy.json`）。
+里面的域名会失去直连效果，转而去走 `route.final`。要保留就把这些域名
+写成 inline 规则：
+
+```json
+{ "domain_suffix": [".example.com"], "outbound": "direct" }
+```
 
 ### 2. 自己写
 
@@ -420,7 +429,7 @@ bash scripts/test-integration.sh   # 端到端（假 core）
 
 ### 已验证
 
-真机（小米 13 / Android 17 / arm64）：
+真机（小米 13 / Android 17 / arm64、Mi 10 Pro / LineageOS / APatch）：
 
 - 装包（APatch `apd module install`）
 - 配置事务 validate / apply / rollback
@@ -432,12 +441,16 @@ bash scripts/test-integration.sh   # 端到端（假 core）
 - 卸载停核心（`remove` 标记）
 - supervisor 被 `SIGKILL` 后 core 跟着退出（`parent_death_signal`）
 - 真实重启后自动恢复（`service.sh` → `connected`）
+- 真实 GUI 配置（263 outbound）导入后 Google / YouTube 可访问
+- Tailscale endpoint：节点进入 `Running` 并拿到 tailnet 地址，换配置后
+  `tailscaled.state` 不变；TUN 下 netcheck 仍成功，无路由回环
 
 ### 未验证
 
 - 长时间运行稳定性（> 数小时）
 - 在 Magisk / KernelSU 上的安装（只在 APatch 上实测过，三者规范兼容）
-- 多设备 / 其他 Android 版本
+- Tailscale 跨设备通信、`accept_routes`、`exit_node`（需要第二台 tailnet 节点）
+- Tailscale 在非 TUN 入口（socks / mixed）下的数据面
 
 ---
 
