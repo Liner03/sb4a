@@ -211,6 +211,7 @@ impl Supervisor {
         )
         .map_err(|_| error::CONFIG_MISSING)?;
         crate::ruleset::prepare(&assets, &mut config)?;
+        crate::endpoint::prepare(self.runtime.root(), &mut config)?;
         let effective = generation.join("run/effective.json");
         crate::atomic::write_json(&effective, &config).map_err(|_| error::STATE_WRITE_FAILED)?;
         // The core writes its diagnostics here; without it a bad config only
@@ -378,6 +379,7 @@ pub fn check_generation(runtime: &Runtime, revision: &str) -> Result<(), Code> {
         crate::atomic::read_json(&config, crate::snapshot::MAX_CONFIG_BYTES as u64)
             .map_err(|_| error::CONFIG_MISSING)?;
     crate::ruleset::prepare(&assets, &mut resolved)?;
+    crate::endpoint::prepare(runtime.root(), &mut resolved)?;
     let checked = generation.join("run/checked.json");
     crate::atomic::write_json(&checked, &resolved).map_err(|_| error::STATE_WRITE_FAILED)?;
     let output = Command::new(runtime.module_dir().join("bin/rootbox"))

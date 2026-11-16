@@ -46,6 +46,7 @@ codes! {
     UNSAFE_DIRECTORY       => "unsafe_directory",
     UNSAFE_CONFIG_PATH     => "unsafe_config_path",
     CONFIG_RESOURCE_MISSING => "config_resource_missing",
+    DNS_REQUIRED           => "dns_required",
     APP_PATH_NOT_PORTABLE  => "app_path_not_portable",
     PLUGIN_UNSUPPORTED     => "plugin_unsupported",
     PLUGIN_INVALID         => "plugin_invalid",

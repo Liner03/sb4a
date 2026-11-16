@@ -9,8 +9,10 @@ set -euo pipefail
 cd "$(dirname "$0")/../go"
 
 OUT="${OUT_DIR:-../target/android/arm64-v8a}"
-# hysteria/tuic need QUIC, reality needs uTLS, wireguard needs its own stack.
-TAGS="${TAGS:-with_quic,with_utls,with_wireguard,with_gvisor}"
+# hysteria/tuic need QUIC, reality needs uTLS, wireguard needs its own stack;
+# tailscale brings its endpoint, DERP and tailcat. The ts_omit_* tags drop
+# the client parts a root module never uses (logtail, ssh, drive, ...).
+TAGS="${TAGS:-with_quic,with_utls,with_wireguard,with_gvisor,with_tailscale,with_dhcp,with_grpc,with_clash_api,ts_omit_logtail,ts_omit_ssh,ts_omit_drive,ts_omit_taildrop,ts_omit_webclient,ts_omit_doctor,ts_omit_capture,ts_omit_kube,ts_omit_aws,ts_omit_synology,ts_omit_bird}"
 export GOPROXY="${GOPROXY:-https://goproxy.cn,direct}"
 mkdir -p "$OUT"
 

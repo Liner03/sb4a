@@ -5,6 +5,7 @@
 //! around it (lifecycle, validation, atomic state, ruleset provisioning).
 
 pub mod atomic;
+pub mod endpoint;
 pub mod error;
 pub mod portable;
 pub mod process;

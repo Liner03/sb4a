@@ -295,13 +295,81 @@ bash scripts/pack-module.sh
 `build-rootbox.sh` 的 `TAGS` 决定编进哪些协议：
 
 ```
-with_quic,with_utls,with_wireguard,with_gvisor
+with_quic,with_utls,with_wireguard,with_gvisor,
+with_tailscale,with_dhcp,with_grpc,with_clash_api,
+ts_omit_logtail,ts_omit_ssh,ts_omit_drive,ts_omit_taildrop,
+ts_omit_webclient,ts_omit_doctor,ts_omit_capture,ts_omit_kube,
+ts_omit_aws,ts_omit_synology,ts_omit_bird
 ```
 
 - `with_quic` → hysteria / hysteria2 / tuic
 - `with_utls` → REALITY
 - `with_wireguard` → wireguard endpoint
 - `with_gvisor` → `stack: gvisor` / `mixed`
+- `with_tailscale` → tailscale endpoint、tailcat、DERP
+- `with_dhcp` → DNS 传输支持 `type: "dhcp"`
+- `with_grpc` → v2ray gRPC 传输的完整实现（默认只有 lite 版）
+- `with_clash_api` → Clash REST 控制面（`experimental.clash_api`）
+- `ts_omit_*` → 裁掉 tailscale 里模块用不到的部分
+
+`with_ech` 和 `with_reality_server` 在 1.15 里已废弃，加上会**编译失败**：
+源码里是 `var _ int = "..."` 这样的故意报错占位符。
+
+### Tailscale
+
+`type: "tailscale"` 的 endpoint 可以直接当出站用，`route.final` 指向它就是
+全局走 tailnet；`accept_routes` 则用来访问对端内网。
+
+```json
+{
+  "endpoints": [
+    { "type": "tailscale", "tag": "ts", "auth_key": "tskey-auth-..." }
+  ],
+  "route": { "final": "ts" }
+}
+```
+
+没写 `auth_key` 时核心会打印登录 URL，浏览器授权一次即可。
+
+**必须有 `dns.servers`。** Tailscale 通过 sing-box 的 DNS 路由解析
+`controlplane.tailscale.com`。Android 没有 `/etc/resolv.conf`，缺 `dns` 段时
+sing-box 会回退到 `127.0.0.1:53` 和 `[::1]:53`——那里没有任何进程监听，结果是
+每 2 秒一次 `connection refused`，永远登不上。所以模块在导入阶段就直接拒绝：
+
+```
+{"ok":false,"error":"dns_required"}
+```
+
+加一个最小 DNS 段即可：
+
+```json
+"dns": {
+  "servers": [ { "tag": "local", "type": "udp", "server": "223.5.5.5" } ],
+  "final": "local"
+}
+```
+
+DoH 如果写域名（`"server": "dns.google"`）会报
+`missing domain resolver for domain server address`——它自己也需要一个解析器。
+要么在 DoH 里填 IP，要么单独配 `domain_resolver`。
+
+**state 目录由模块接管**：sing-box 的 `state_directory` 默认是相对路径，而核心
+的工作目录是 `generations/<rev>/run`，每次 `config apply` 都会重建。模块会把它
+改写到 `/data/adb/sb4a/endpoints/<tag>`（0700），所以换配置不会丢节点身份、不用
+重新登录。自己写了绝对路径的话不会被覆盖。
+
+### Clash API
+
+编进来了，但**默认不启用**——`config convert` 会把桌面配置里的
+`experimental.clash_api` 删掉，因为那是给 GUI 用的本地端口。要用就自己写：
+
+```json
+{ "experimental": { "clash_api": {
+    "external_controller": "127.0.0.1:9090", "secret": "改掉这个"
+} } }
+```
+
+只绑 `127.0.0.1`，并设 `secret`：任何能连到本机端口的 App 都能通过它改路由。
 
 ### 测试
 
